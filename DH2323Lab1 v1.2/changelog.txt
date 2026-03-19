@@ -1,0 +1,1 @@
+v1.2	Changed cmakelists.txt reference to "SkeletonSDL2.cpp" file to "skeletonSDL2.cpp" for Linux compatibility.
