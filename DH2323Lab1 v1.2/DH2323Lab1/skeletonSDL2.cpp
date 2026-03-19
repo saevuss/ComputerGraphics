@@ -24,6 +24,7 @@ SDL2Aux *sdlAux;
 
 /****** TASK3 */
 vector<vec3> stars( 1000 );
+int t;
 
 
 // ---------------------------------------------------------
@@ -31,6 +32,7 @@ vector<vec3> stars( 1000 );
 void Draw();
 void Interpolate(float a, float b, vector<float>& result); //TASK2	
 void InterpolateColorVec(vec3 colo1, vec3 color2, vector<vec3>& resultColor);
+void Update(); //TASK3.4
 // ---------------------------------------------------------
 
 // FUNCTION DEFINITIONS
@@ -57,14 +59,17 @@ int main(int argc, char* argv[])
 
 	/*************** TASK3 *************/
 	for(int s = 0; s< stars.size(); s++){ //initializing the location
-		stars[s].x = float(rand()) / float(RAND_MAX);
-		stars[s].y = float(rand()) / float(RAND_MAX);
-		stars[s].z = float(rand()) / float(RAND_MAX);
+		stars[s].x = 2 * float(rand()) / float(RAND_MAX) -1 ; //-1 ≤ x ≤ 1
+		stars[s].y = 2 *float(rand()) / float(RAND_MAX) - 1 ; //-1 ≤ y ≤ 1
+		stars[s].z = float(rand()) / float(RAND_MAX); //0 ≤ z ≤ 1
 	}
+
+	t = SDL_GetTicks();
 	/*********************************** */
 
 	sdlAux = new SDL2Aux(SCREEN_WIDTH, SCREEN_HEIGHT);
 	while (!sdlAux->quitEvent()) {
+		Update();
 		Draw();
 	}
 	
@@ -99,9 +104,10 @@ void Draw()
 		}
 	}
 
-	int focal_lenght = H/2;
-	vec3 color2(1.0,1.0,1.0);
+	int focal_lenght = SCREEN_HEIGHT/2;
+	
 	for(size_t i = 0; i<stars.size(); i++){
+		vec3 color2 = 0.2f * vec3(1.0,1.0,1.0) / (stars[i].z* stars[i].z);
 		int u = focal_lenght*(stars[i].x/stars[i].z) + SCREEN_WIDTH/2;
 		int v = focal_lenght*(stars[i].y/stars[i].z) + SCREEN_HEIGHT/2;
 		sdlAux->putPixel(u, v, color2);
@@ -166,3 +172,14 @@ void InterpolateColorVec(vec3 color1, vec3 color2, vector<vec3>& resultColor){
 }
 
 /** TASK 3.4 */
+void Update(){
+	int t2 = SDL_GetTicks();
+	float dt = float(t2-t); //holds the number of milliseconds that has passed since update was called last time
+	t = t2; //update to the new value of the time
+	float speed = 0.0005f;
+	for(int s = 0; s< stars.size(); s++){
+		stars[s].z = stars[s].z - speed*dt;
+		if( stars[s].z <= 0 ) stars[s].z += 1;
+		if( stars[s].z > 1 ) stars[s].z -= 1;
+	}
+}
