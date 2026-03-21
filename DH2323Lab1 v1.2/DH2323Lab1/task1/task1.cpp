@@ -32,6 +32,13 @@ void Draw();
 int main(int argc, char* argv[])
 {	
 
+
+	vector<float> result(10);
+	Interpolate(5, 14, result);
+	for(int i=0; i<result.size(); i++){
+		cout << result[i] << " ";
+	}
+
 	sdlAux = new SDL2Aux(SCREEN_WIDTH, SCREEN_HEIGHT);
 	while (!sdlAux->quitEvent()) {
 		Draw();
