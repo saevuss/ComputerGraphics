@@ -28,7 +28,6 @@ SDL2Aux *sdlAux;
 void Draw();
 void Interpolate(float a, float b, vector<float>& result); //TASK2	
 void InterpolateColorVec(vec3 colo1, vec3 color2, vector<vec3>& resultColor);
-void Update(); //TASK3.4
 // ---------------------------------------------------------
 
 // FUNCTION DEFINITIONS
@@ -53,7 +52,6 @@ int main(int argc, char* argv[])
 
 	sdlAux = new SDL2Aux(SCREEN_WIDTH, SCREEN_HEIGHT);
 	while (!sdlAux->quitEvent()) {
-		Update();
 		Draw();
 	}
 	
@@ -97,8 +95,14 @@ void Draw()
 /** TASK 2.1 */
 void Interpolate(float a, float b, vector<float>& result){
 	//in this way it takes into account the result size trace of the 
-	for(int i = a; i<b+1 && (i-a)<result.size() ; i++){
-		result[i-a] = i;
+	int n = result.size();
+	if(n==1){
+		result[0] = a;
+	} else{
+		for(int i = 0; i<n ; i++){
+			float t = float(i)/(n-1);
+			result[i] = a + t*(b-a);
+		}
 	}
 }
 
