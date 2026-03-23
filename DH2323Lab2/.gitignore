@@ -1,0 +1,7 @@
+build 
+cmake
+let tl = gsap.timeline();
+tl.to(".hero", { opacity: 1, scale: 1, ease: Power2.easeOut, duration: 4 })
+.to(".menu", {opacity:1, y: 20, stagger: 0.2, duration: 1.5, ease: Power2.easeOut});
+project
+skeletonSDL2.cpp
