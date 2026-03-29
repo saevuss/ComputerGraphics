@@ -25,6 +25,10 @@ typedef struct Intersection{
 };
 Intersection closestIntersection;
 vec3 cameraPos(0, 0, -2); //because x and y are form -1 to 1, the camera is centered and outside the scene
+glm::mat3 R; //rotation matrix
+float yaw; //angle which the camera should be rotated around the y-axis
+float speed = 0.0005f;
+float rotateSpeed = 0.0005f;
 
 
 // ----------------------------------------------------------------------------
@@ -64,27 +68,66 @@ void Update(void)
 	t = t2;
 	//cout << "Render time: " << dt << " ms." << endl;
 	const Uint8 *keystate = SDL_GetKeyboardState(NULL);
-	if ( keystate [SDL_SCANCODE_UP] )
-	{
-	 //move camera forward, towards z negatvie
-	 	cameraPos.z -= 0.2;
-	}
-	if(keystate [SDL_SCANCODE_DOWN])
-	{
-	// Move camera backward, towards z positive
-		cameraPos.z += 0.2;
-	}
+	
 	if(keystate [SDL_SCANCODE_LEFT] )
 	{
-	// Move camera to the left, negative x axis
-		cameraPos.x -= 0.2;
+		// Move camera to the left, negative x axis
+		//cameraPos.x -= dt*speed;
+		yaw -= rotateSpeed*dt; //update of yaw 
+        
 	}
 	if(keystate [SDL_SCANCODE_RIGHT] )
 	{
-	// Move camera to the right, positive x axis
-		cameraPos.x += 0.2;
+		// Move camera to the right, positive x axis
+		//cameraPos.x += dt*speed;
+		yaw += rotateSpeed*dt;//update of yaw 
 	}
-	}					
+	/*
+
+	Update the rotation matrix R
+
+	pag 163 of course book
+
+	Ry = 
+	| cos(θ) 	0 	sin(θ) | //right vector
+	| 0 	 	1 	0 	   | //down  vector
+	| -sin(θ) 	0	cos(θ) | //forward vector
+	*/
+	//update of the rotation matrix
+	R = mat3(
+		vec3 (cos(yaw), 0, -sin(yaw)), 
+		vec3(0, 1, 0),
+		vec3(sin(yaw), 0, cos(yaw))
+	);
+
+	//task 5.4
+	vec3 right(		R[0][0], R[0][1], R[0][2]);
+	vec3 down(		R[1][0], R[1][1], R[1][2]);
+	vec3 forward (	R[2][0], R[2][1], R[2][2]);	
+	if ( keystate [SDL_SCANCODE_UP] )
+	{
+	 	//move camera forward, towards z negatvie
+	 	cameraPos -= dt*speed * forward;
+	}
+	if(keystate [SDL_SCANCODE_DOWN])
+	{
+		// Move camera backward, towards z positive
+		cameraPos += dt*speed * forward;
+	}
+};
+
+// void updateLeft(){
+//     R[0][0] -= dt*speed;
+//     R[0][1] -= dt*speed;
+//     R[0][1] -= dt*speed;  
+    
+// }	
+
+// void updateRight(){
+//     R[0][0] += dt*speed;
+//     R[0][1] += dt*speed;
+//     R[0][1] += dt*speed;   
+// }	
 
 void Draw()
 {
@@ -109,9 +152,11 @@ void Draw()
                 y - SCREEN_HEIGHT/2,
                 focalLength
             );
+			vec3 dir_world = R*dir;
+
             Intersection intersection;
 			//calculating if the ray through the pixel is intersecting one of the triangles
-            if(ClosestIntersection(cameraPos, dir, triangles, intersection)){
+            if(ClosestIntersection(cameraPos, dir_world, triangles, intersection)){
                 sdlAux->putPixel(x, y, triangles[intersection.triangleIndex].color); //uses the color of the closest intersection (closest to the camera, so it covers whatever is behind)
             } else {
                 sdlAux->putPixel(x, y, vec3(0,0,0));
