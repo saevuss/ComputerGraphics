@@ -1,7 +1,7 @@
 //DH2323 skeleton code, Lab2 (SDL2 version)
 #include <iostream>
 #include <glm/glm.hpp>
-#include "SDL2auxiliary.h"
+#include "SDL2Auxiliary/SDL2Auxiliary.h"
 #include "TestModel.h"
 #include <algorithm>
 
@@ -112,16 +112,16 @@ bool ClosestIntersection(vec3 start, vec3 dir, const vector<Triangle>& triangles
 		vec3 b = start - v0;
 		mat3 A(-dir, e1, e2);
 		vec3 x = glm::inverse(A) * b; // x = t, u, v = x.x, x.y, x.z
-		if(x.y > 0 && x.z > 0 && x.y + x.z < 1 && x.x>=0){
-			//valid intersection
+		if(x.y >= 0 && x.z >= 0 && x.y + x.z <= 1 && x.x>=0){
+			//valid intersection if u and v are >=0 and for those point whose are actually within the triangle
+			//if we use strict operator > and < it happens the phenomenon of Surface Acne (points on the border are not correctly rendered)
 			vec3 r = start + x.x*dir; 
-			float len = glm::length(r);
-			if(len<min_r){
+			if(x.x <= min_r){ //we compare x.x that indicates how long we walk from the origin of the ray
 				//update of the closest intersection
-				closestIntersection.distance = len;
+				closestIntersection.distance = x.x;
 				closestIntersection.triangleIndex = t;
 				closestIntersection.position = r;
-				min_r = len;
+				min_r = x.x;
 			}
 		}
 
