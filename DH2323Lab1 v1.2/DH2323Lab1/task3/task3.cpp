@@ -81,15 +81,15 @@ void Draw()
 	}
 
 
-	for (int y = 0; y<SCREEN_HEIGHT; ++y)
-	{	
-		for (int x = 0; x<SCREEN_WIDTH; ++x)
-		{	
+	// for (int y = 0; y<SCREEN_HEIGHT; ++y)
+	// {	
+	// 	for (int x = 0; x<SCREEN_WIDTH; ++x)
+	// 	{	
 
-			sdlAux->putPixel(x, y, color); // to draw single pixel
+	// 		sdlAux->putPixel(x, y, color2); // to draw single pixel
 
-		}
-	}
+	// 	}
+	// }
 
 	sdlAux->render();
 }
