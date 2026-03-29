@@ -33,7 +33,7 @@ float yaw; //angle which the camera should be rotated around the y-axis
 float speed = 0.0005f;
 float rotateSpeed = 0.0005f;
 
-//task 6 illumination
+//task 6 direct illumination
 vec3 lightPos(	0, 	-0.5, 	-0.7);
 vec3 lightColor = 14.f * vec3(1, 1, 1); //power P, so the energy per time unit of the emitted light for each color component
 
@@ -137,11 +137,32 @@ void Update(void)
 		cameraPos -= dt*speed*down;
         
 	}
-	if(keystate [SDL_SCANCODE_D] )
+	if(keystate [SDL_SCANCODE_B] )
 	{
 		// Move camera to the right, positive x axis
 		cameraPos += dt*speed*down;
 	}
+	if(keystate [SDL_SCANCODE_W] )
+	{
+		// Move camera to the right, positive x axis
+		lightPos += dt*speed*forward;
+	}
+	if(keystate [SDL_SCANCODE_S] )
+	{
+		// Move camera to the right, positive x axis
+		lightPos -= dt*speed*forward;
+	}
+	if(keystate [SDL_SCANCODE_D] )
+	{
+		// Move camera to the right, positive x axis
+		lightPos += dt*speed*right;
+	}
+	if(keystate [SDL_SCANCODE_A] )
+	{
+		// Move camera to the right, positive x axis
+		lightPos -= dt*speed*right;
+	}
+
 };
 
 // void updateLeft(){
@@ -186,8 +207,8 @@ void Draw()
 			//calculating if the ray through the pixel is intersecting one of the triangles
             if(ClosestIntersection(cameraPos, dir_world, triangles, intersection)){
 				vec3 dirLight = DirectLight(intersection);
-				sdlAux->putPixel(x, y, dirLight);
-                //sdlAux->putPixel(x, y, triangles[intersection.triangleIndex].color * dirLight); //uses the color of the closest intersection (closest to the camera, so it covers whatever is behind)
+				//sdlAux->putPixel(x, y, dirLight);
+                sdlAux->putPixel(x, y, triangles[intersection.triangleIndex].color * dirLight); //uses the color of the closest intersection (closest to the camera, so it covers whatever is behind)
             } else {
                 sdlAux->putPixel(x, y, vec3(0,0,0));
             }
@@ -213,7 +234,7 @@ bool ClosestIntersection(vec3 start, vec3 dir, const vector<Triangle>& triangles
 			//valid intersection if u and v are >=0 and for those point whose are actually within the triangle
 			vec3 r = start + x.x*dir; 
 			if(x.x <= min_r){
-				//update of the closest intersection
+				//update of the closest intersection 
 				closestIntersection.distance = x.x;
 				closestIntersection.triangleIndex = t;
 				closestIntersection.position = r;
@@ -230,9 +251,32 @@ vec3 DirectLight(const Intersection& i){
 	float r = glm::length(lightPos - i.position); //difference between the two positions
 	float A = 4.0f * M_PI * r * r;
 	vec3 B = lightColor / A; //power per area
+	
+
+	vec3 dirSurfaceLight = glm::normalize(lightPos - i.position); 
+
+	//calculations of intensity
 	vec3 normal   = triangles[i.triangleIndex].normal;
-	vec3 dirSurfaceLight = glm::normalize(lightPos - i.position);
 	vec3 D = B * glm::max(glm::dot(normal, dirSurfaceLight), 0.0f);
+
+	//shadow check
+	Intersection inters;
+	float distToLight = glm::length(lightPos - i.position);
+	float epsilon = 0.0001f;
+	vec3 start = i.position + epsilon * normal;
+	if(ClosestIntersection(start, dirSurfaceLight, triangles, inters)){
+		//error.png generated because dirSurfaceLight starts exactly from the surface, so there is a self-intersection if we do not add any epsilon to starting point
+		if(inters.distance < distToLight){ //inters.distance = distance from the closest intersection
+			//the distance to the closest intersecting surface is closer than
+			// the distance to the light source => in shadow, no direct ill
+			D = vec3(0, 0, 0); //no direct light
+		}
+	}
+
 	return D;
+}
+
+vec3 DiffuseLight(const Intersection& i){
+
 }
 
