@@ -36,7 +36,7 @@ float rotateSpeed = 0.0005f;
 //task 6 direct illumination
 vec3 lightPos(	0, 	-0.5, 	-0.7);
 vec3 lightColor = 14.f * vec3(1, 1, 1); //power P, so the energy per time unit of the emitted light for each color component
-
+vec3 indirectLight = 0.5f * vec3(1, 1, 1);
 
 // ----------------------------------------------------------------------------
 // FUNCTIONS
@@ -273,7 +273,7 @@ vec3 DirectLight(const Intersection& i){
 		}
 	}
 
-	return D;
+	return indirectLight * (D+B);
 }
 
 vec3 DiffuseLight(const Intersection& i){
