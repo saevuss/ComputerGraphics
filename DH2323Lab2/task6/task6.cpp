@@ -208,7 +208,10 @@ void Draw()
             if(ClosestIntersection(cameraPos, dir_world, triangles, intersection)){
 				vec3 dirLight = DirectLight(intersection);
 				//sdlAux->putPixel(x, y, dirLight);
-                sdlAux->putPixel(x, y, triangles[intersection.triangleIndex].color * dirLight); //uses the color of the closest intersection (closest to the camera, so it covers whatever is behind)
+				float r = glm::length(lightPos - intersection.position); //difference between the two positions
+				float A = 4.0f * M_PI * r * r;
+				vec3 B = lightColor / A; //power per area
+                sdlAux->putPixel(x, y, triangles[intersection.triangleIndex].color * (dirLight + B) * indirectLight); //uses the color of the closest intersection (closest to the camera, so it covers whatever is behind)
             } else {
                 sdlAux->putPixel(x, y, vec3(0,0,0));
             }
@@ -273,7 +276,7 @@ vec3 DirectLight(const Intersection& i){
 		}
 	}
 
-	return indirectLight * (D+B);
+	return D;
 }
 
 vec3 DiffuseLight(const Intersection& i){

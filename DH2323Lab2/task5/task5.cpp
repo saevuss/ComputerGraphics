@@ -106,13 +106,13 @@ void Update(void)
 	vec3 forward (	R[2][0], R[2][1], R[2][2]);	
 	if ( keystate [SDL_SCANCODE_UP] )
 	{
-	 	//move camera forward, towards z negatvie
-	 	cameraPos -= dt*speed * forward;
+	 	//move camera forward, towards z positive
+	 	cameraPos += dt*speed * forward;
 	}
 	if(keystate [SDL_SCANCODE_DOWN])
 	{
-		// Move camera backward, towards z positive
-		cameraPos += dt*speed * forward;
+		// Move camera backward, towards z negative
+		cameraPos -= dt*speed * forward;
 	}
 };
 
