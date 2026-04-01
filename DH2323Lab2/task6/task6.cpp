@@ -45,6 +45,8 @@ void Update(void);
 void Draw(void);
 bool ClosestIntersection(vec3 start, vec3 dir, const vector<Triangle>& triangles, Intersection& closestIntersection);
 vec3 DirectLight(const Intersection& i);
+float det(mat3 A);
+mat3 invWithCramer(mat3 A);
 
 int main( int argc, char* argv[] )
 {
@@ -112,13 +114,13 @@ void Update(void)
 	vec3 forward (	R[2][0], R[2][1], R[2][2]);	
 	if ( keystate [SDL_SCANCODE_UP] )
 	{
-	 	//move camera forward, towards z negatvie
-	 	cameraPos -= dt*speed * forward;
+	 	//move camera forward, towards z positive
+	 	cameraPos += dt*speed * forward;
 	}
 	if(keystate [SDL_SCANCODE_DOWN])
 	{
-		// Move camera backward, towards z positive
-		cameraPos += dt*speed * forward;
+		// Move camera backward, towards z negative
+		cameraPos -= dt*speed * forward;
 	}
 	if(keystate [SDL_SCANCODE_L] )
 	{
@@ -129,7 +131,7 @@ void Update(void)
 	if(keystate [SDL_SCANCODE_R] )
 	{
 		// Move camera to the right, positive x axis
-		cameraPos -= dt*speed*right;
+		cameraPos += dt*speed*right;
 	}
 	if(keystate [SDL_SCANCODE_U] )
 	{
@@ -144,22 +146,22 @@ void Update(void)
 	}
 	if(keystate [SDL_SCANCODE_W] )
 	{
-		// Move camera to the right, positive x axis
+		// Move light forward
 		lightPos += dt*speed*forward;
 	}
 	if(keystate [SDL_SCANCODE_S] )
 	{
-		// Move camera to the right, positive x axis
+		// Move light backward
 		lightPos -= dt*speed*forward;
 	}
 	if(keystate [SDL_SCANCODE_D] )
 	{
-		// Move camera to the right, positive x axis
+		// Move light to the right
 		lightPos += dt*speed*right;
 	}
 	if(keystate [SDL_SCANCODE_A] )
 	{
-		// Move camera to the right, positive x axis
+		// Move light to the left
 		lightPos -= dt*speed*right;
 	}
 
@@ -223,23 +225,33 @@ void Draw()
 
 bool ClosestIntersection(vec3 start, vec3 dir, const vector<Triangle>& triangles, Intersection& closestIntersection){
 	float min_r = m;
-	for(int t=0; t<triangles.size(); t++){
+	for(int tr=0; tr<triangles.size(); tr++){
 		//iterate through all the triangles
-		vec3 v0 = triangles[t].v0;
-		vec3 v1 = triangles[t].v1;
-		vec3 v2 = triangles[t].v2;
+		vec3 v0 = triangles[tr].v0;
+		vec3 v1 = triangles[tr].v1;
+		vec3 v2 = triangles[tr].v2;
 		vec3 e1 = v1 - v0;
 		vec3 e2 = v2 - v0;
 		vec3 b = start - v0;
 		mat3 A(-dir, e1, e2);
-		vec3 x = glm::inverse(A) * b; // x = t, u, v = x.x, x.y, x.z
+		float detA = det(A);
+		if(detA==0){
+			continue;
+		}
+		float t = det(mat3(b, e1, e2))/detA;
+		float u = det(mat3(-dir, b, e2))/detA;
+		float v = det(mat3(-dir, e1, b))/detA;
+		
+		vec3 x = vec3(t, u, v);
+		//vec3 x = glm::inverse(A) * b; // x = t, u, v = x.x, x.y, x.z
+		
 		if(x.y >= 0 && x.z >= 0 && x.y + x.z <= 1 && x.x>=0){
 			//valid intersection if u and v are >=0 and for those point whose are actually within the triangle
 			vec3 r = start + x.x*dir; 
 			if(x.x <= min_r){
 				//update of the closest intersection 
 				closestIntersection.distance = x.x;
-				closestIntersection.triangleIndex = t;
+				closestIntersection.triangleIndex = tr;
 				closestIntersection.position = r;
 				min_r = x.x;
 			}
@@ -248,6 +260,14 @@ bool ClosestIntersection(vec3 start, vec3 dir, const vector<Triangle>& triangles
 	}
 	return min_r != m;
 }
+
+float det(mat3 A){
+	//for a 3x3 matrix, the determinant is given by a sum of products along diagonals 
+	float sumUpDownDiagonals = A[0][0]*A[1][1]*A[2][2] + A[0][1]*A[1][2]*A[2][0] + A[0][2]*A[1][0]*A[2][1];
+	float sumDownUpDiagonals = A[2][0]*A[1][1]*A[0][2] + A[2][1]*A[1][2]*A[0][0] + A[2][2]*A[1][0]*A[0][1];
+	return sumUpDownDiagonals - sumDownUpDiagonals;
+}
+
 
 vec3 DirectLight(const Intersection& i){
 	//distance from light source:
