@@ -292,10 +292,15 @@ void ComputePolygonRows(const vector<ivec2>& vertexPixels, vector<ivec2>& leftPi
 void DrawPolygonRows(const vector<ivec2>& leftPixels, const vector<ivec2>& rightPixels){
     int ROWS = leftPixels.size();
     for(int i=0; i<ROWS; i++){ //iterating across rows
-        int rowLenght = abs(leftPixels[i].x - rightPixels[i].x); //calculating rowLenght
-        for(int j=0; j < rowLenght; j++){
-            sdlAux->putPixel(leftPixels[i].x + j, leftPixels[i].y, currentColor);
-			//If by mistake we also wrote leftPixels[i].y + j, the error image is generated.
+        int rowLenght = abs(leftPixels[i].x - rightPixels[i].x) + 1; //calculating rowLenght
+		// for(int j=0; j < rowLenght; j++){
+		// 	sdlAux->putPixel(leftPixels[i].x + j, leftPixels[i].y, currentColor);
+		// 	//If by mistake we also wrote leftPixels[i].y + j, the error image is generated.
+        // }
+		vector<ivec2> result(rowLenght);
+		Interpolate(leftPixels[i], rightPixels[i], result);
+		for(int j=0; j < rowLenght; j++){
+			sdlAux->putPixel(result[j].x, result[j].y, currentColor);
         }
 
     }
@@ -313,4 +318,3 @@ void DrawPolygon(const vector<vec3>& vertices){
 	DrawPolygonRows(leftPixels, rightPixels);
 
 }
-
