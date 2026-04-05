@@ -190,6 +190,26 @@ void Update(void)
 	if (keystate[SDL_SCANCODE_E]) {
 		pitch += rotateSpeed*dt;
 	}
+	if(keystate [SDL_SCANCODE_I] )
+	{
+		// Move light forward
+		lightPos += dt*speed*forward;
+	}
+	if(keystate [SDL_SCANCODE_K] )
+	{
+		// Move light backward
+		lightPos -= dt*speed*forward;
+	}
+	if(keystate [SDL_SCANCODE_L] )
+	{
+		// Move light to the right
+		lightPos += dt*speed*right;
+	}
+	if(keystate [SDL_SCANCODE_J] )
+	{
+		// Move light to the left
+		lightPos -= dt*speed*right;
+	}
 }
 
 void Draw()
@@ -422,6 +442,8 @@ void Interpolate(Pixel a, Pixel b, vector<Pixel>& result){
 	//************ 
 
 	// task 7.7 per pixel ill *******
+	a.pos3d *= a.zinv; //for perspective interpolation
+	b.pos3d *= b.zinv; //for perspective interpolation
 	vec3 stepPos3d = (b.pos3d - a.pos3d)/float(max(N-1, 1));
 	vec3 currentPos3d = a.pos3d;
 	//******** 
@@ -562,11 +584,11 @@ void PixelShader(const Pixel& p){
 		
 		
 		//task 7.7 illumination per pixel
-		float r = glm::length(lightPos - p.pos3d); //difference between the two positions
+		float r = glm::length(lightPos - (p.pos3d/p.zinv)); //difference between the two positions
 		float A = 4.0f * M_PI * r * r;
 		vec3 B = lightPower / A; //power per area
 		
-		vec3 dirSurfaceLight = glm::normalize(lightPos - p.pos3d); 
+		vec3 dirSurfaceLight = glm::normalize(lightPos - (p.pos3d/p.zinv)); 
 
 		//calculations of intensity
 		vec3 D = B * glm::max(glm::dot(currentNormal, dirSurfaceLight), 0.0f);
