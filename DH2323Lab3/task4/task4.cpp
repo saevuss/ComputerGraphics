@@ -22,10 +22,13 @@ vector<Triangle> triangles;
 float f = SCREEN_HEIGHT/2;
 vec3 cameraPos(0, 0, -3.001); //top left corner
 float yaw = 0; //initial rotation angle
-mat3 R = mat3(
-		vec3 (cos(yaw), 0, -sin(yaw)), 
-		vec3(0, 1, 0),
-		vec3(sin(yaw), 0, cos(yaw)));
+float pitch = 0;
+mat3 Ry;
+mat3 Rx;
+mat3 R;
+float speed = 0.0005f;
+float rotateSpeed = 0.0005f;
+		
 
 // ----------------------------------------------------------------------------
 // FUNCTIONS
@@ -59,37 +62,60 @@ void Update(void)
 	float dt = float(t2 - t);
 	t = t2;
 	//cout << "Render time: " << dt << " ms." << endl;
-
+	Rx = mat3(
+		vec3 (1, 0, 0), 
+		vec3(0, cos(pitch), -sin(pitch)),
+		vec3(0, sin(pitch), cos(pitch)));
+	Ry = mat3(
+		vec3 (cos(yaw), 0, -sin(yaw)), 
+		vec3(0, 1, 0),
+		vec3(sin(yaw), 0, cos(yaw))
+	);
+	R = Rx*Ry;
+	
+	vec3 right(		R[0][0], R[0][1], R[0][2]);
+	vec3 down(		R[1][0], R[1][1], R[1][2]);
+	vec3 forward (	R[2][0], R[2][1], R[2][2]);	
 	const Uint8* keystate = SDL_GetKeyboardState(NULL);
 	if (keystate[SDL_SCANCODE_UP]) {
 		// Move camera forward
+		cameraPos += dt*speed * forward;
 	}
 	if (keystate[SDL_SCANCODE_DOWN]) {
 		// Move camera backward
+		cameraPos -= dt*speed * forward;
 	}
 	if (keystate[SDL_SCANCODE_LEFT]) {
 		// Move camera to the left
+		cameraPos -= dt*speed * right;
 	}
 	if (keystate[SDL_SCANCODE_RIGHT]) {
 		// Move camera to the right
+		cameraPos += dt*speed * right;
 	}
 	if (keystate[SDL_SCANCODE_W]) {
+		//move camera up
+		cameraPos -= dt*speed*down;
 
 	}
 	if (keystate[SDL_SCANCODE_S]) {
-
+		//move camera down
+		cameraPos += dt*speed*down;
 	}
 	if (keystate[SDL_SCANCODE_A]) {
-
+		// rotate camera to the left
+		yaw -= rotateSpeed*dt;
 	}
 	if (keystate[SDL_SCANCODE_D]) {
-
+		//rotate camera to the right
+		yaw += rotateSpeed*dt;
 	}
 	if (keystate[SDL_SCANCODE_Q]) {
-
+		//pitch rotation
+		pitch -= rotateSpeed*dt;
 	}
 	if (keystate[SDL_SCANCODE_E]) {
-
+		pitch += rotateSpeed*dt;
 	}
 }
 
