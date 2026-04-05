@@ -35,6 +35,7 @@ void Draw(void);
 void VertexShader(const vec3 vertices, ivec2& projPos);
 void Interpolate(ivec2 a, ivec2 b, vector<ivec2>& result);
 void DrawLineSDL(ivec2 a, ivec2 b, vec3 color);
+void DrawPolygonEdges(const vector <vec3>& vertices);
 
 int main(int argc, char* argv[])
 {
@@ -107,15 +108,16 @@ void Draw()
 
 		//loops through all the vertices of the triangles
 		bool flag = true;
-		for(int v=0; v<3; v++){
-			ivec2 projPos;
-			ivec2 projPos2;
-			vec3 color(1, 1, 1);
-			VertexShader(vertices[v], projPos);
-			VertexShader(vertices[(v+1)%3], projPos2);
-			DrawLineSDL(projPos, projPos2, color);	
-			//sdlAux->putPixel(projPos.x, projPos.y, color);
-		}
+		DrawPolygonEdges(vertices);
+		// for(int v=0; v<3; v++){
+		// 	ivec2 projPos;
+		// 	ivec2 projPos2;
+		// 	vec3 color(1, 1, 1);
+		// 	VertexShader(vertices[v], projPos);
+		// 	VertexShader(vertices[(v+1)%3], projPos2);
+		// 	DrawLineSDL(projPos, projPos2, color);	
+		// 	//sdlAux->putPixel(projPos.x, projPos.y, color);
+		// }
 
 
 	}
@@ -141,7 +143,7 @@ void Interpolate(ivec2 a, ivec2 b, vector<ivec2>& result){
 	}
 }
 
-//task 4.4
+//task 4.3
 void DrawLineSDL(ivec2 a, ivec2 b, vec3 color){
 	ivec2 delta = glm::abs(a - b);
 	int pixels = glm::max(delta.x, delta.y) + 1;
@@ -150,4 +152,21 @@ void DrawLineSDL(ivec2 a, ivec2 b, vec3 color){
 	for(int i = 0; i<pixels; i++){
 		sdlAux->putPixel(line[i].x, line[i].y, color);
 	}
+}
+
+//task 4.4
+void DrawPolygonEdges(const vector <vec3>& vertices){
+	int V = vertices.size();
+	//transform each vertex from 3D world position to 2D image positoin
+	vector <ivec2> projectedVertices(V);
+	for(int i=0; i<V; i++){
+		VertexShader(vertices[i], projectedVertices[i]);
+	}
+	//Loop over all vertices and draw the edge from it to the next vertex
+	for(int i = 0; i<V; i++){
+		int j = (i+1)%V; //the next vertex
+		vec3 color(1, 1, 1);
+		DrawLineSDL(projectedVertices[i], projectedVertices[j], color);
+	}
+
 }
