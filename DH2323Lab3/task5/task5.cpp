@@ -28,6 +28,7 @@ mat3 Rx;
 mat3 R;
 float speed = 0.0005f;
 float rotateSpeed = 0.0005f;
+vec3 currentColor;
 		
 
 // ----------------------------------------------------------------------------
@@ -40,6 +41,8 @@ void Interpolate(ivec2 a, ivec2 b, vector<ivec2>& result);
 void DrawLineSDL(ivec2 a, ivec2 b, vec3 color);
 void DrawPolygonEdges(const vector <vec3>& vertices);
 void ComputePolygonRows(const vector<ivec2>& vertexPixels, vector<ivec2>& leftPixels, vector<ivec2>& rightPixels);
+void DrawPolygonRows(const vector<ivec2>& leftPixels, const vector<ivec2>& rightPixels);
+void DrawPolygon(const vector<vec3>& vertices);
 
 int main(int argc, char* argv[])
 {
@@ -150,10 +153,7 @@ void Draw()
 		vertices[0] = triangles[i].v0;
 		vertices[1] = triangles[i].v1;
 		vertices[2] = triangles[i].v2;
-
-		//loops through all the vertices of the triangles
-		bool flag = true;
-		DrawPolygonEdges(vertices);
+		
 		// for(int v=0; v<3; v++){
 		// 	ivec2 projPos;
 		// 	ivec2 projPos2;
@@ -163,6 +163,10 @@ void Draw()
 		// 	DrawLineSDL(projPos, projPos2, color);	
 		// 	//sdlAux->putPixel(projPos.x, projPos.y, color);
 		// }
+
+		//DrawPolygonEdges(vertices);
+		currentColor = triangles[i].color;
+		DrawPolygon(vertices);
 
 
 	}
@@ -217,11 +221,6 @@ void DrawPolygonEdges(const vector <vec3>& vertices){
 
 }
 
-void FillPolygonEdges(vector <vec3>& vertices){
-	
-
-}
-
 void ComputePolygonRows(const vector<ivec2>& vertexPixels, vector<ivec2>& leftPixels, vector<ivec2>& rightPixels){
 	//1. find max and min y-value of the polygon and compute the number of rows it occupies
 	int max_y = -251;
@@ -240,7 +239,7 @@ void ComputePolygonRows(const vector<ivec2>& vertexPixels, vector<ivec2>& leftPi
 	}
 
 	//2. resize left pixel and right pixel so that they have an element for each row
-	int ROWS = max_y - min_y;
+	int ROWS = max_y - min_y + 1;
 	leftPixels.resize(ROWS);
 	rightPixels.resize(ROWS);
 
@@ -288,5 +287,30 @@ void ComputePolygonRows(const vector<ivec2>& vertexPixels, vector<ivec2>& leftPi
 		}
 	}
 	
+}
+
+void DrawPolygonRows(const vector<ivec2>& leftPixels, const vector<ivec2>& rightPixels){
+    int ROWS = leftPixels.size();
+    for(int i=0; i<ROWS; i++){ //iterating across rows
+        int rowLenght = abs(leftPixels[i].x - rightPixels[i].x); //calculating rowLenght
+        for(int j=0; j < rowLenght; j++){
+            sdlAux->putPixel(leftPixels[i].x + j, leftPixels[i].y, currentColor);
+			//If by mistake we also wrote leftPixels[i].y + j, the error image is generated.
+        }
+
+    }
+}
+
+void DrawPolygon(const vector<vec3>& vertices){
+	int V = vertices.size();
+	vector <ivec2> vertexPixels(V);
+	for(int i=0; i<V; i++){
+		VertexShader(vertices[i], vertexPixels[i]);
+	}
+	vector<ivec2> leftPixels;
+	vector<ivec2> rightPixels;
+	ComputePolygonRows(vertexPixels, leftPixels, rightPixels);
+	DrawPolygonRows(leftPixels, rightPixels);
+
 }
 
