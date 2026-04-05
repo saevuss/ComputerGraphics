@@ -1,7 +1,5 @@
 # DH2323 — Computer Graphics
 > Laboratory work and projects for the **DH2323** course at **KTH Royal Institute of Technology**.  
-> Covers the transition from 2D raster manipulation to 3D Raytracing and physical light simulation.
-
 ---
 
 ## 📁 Labs Overview
@@ -35,6 +33,23 @@ A CPU-based raytracer designed to render 3D scenes by tracing light paths from t
   <img src="DH2323Lab2/task5/rotation.png" width="31%" />
   <img src="DH2323Lab2/task6/directBW.png" width="31%" />
   <img src="DH2323Lab2/task6/indirectLight.png" width="31%" />
+</p>
+
+### Lab 3 — Rasterization
+Focus on real-time rendering using rasterization, transitioning from ray-based rendering to scanline-based triangle filling.
+
+- **Wireframe Rendering** — Projection of 3D triangles onto screen space for structural validation.
+- **Triangle Rasterization** — Filling triangles using row-wise interpolation between edges.
+- **Depth Buffer (Z-buffer)** — Visibility handling using inverse depth (`1/z`) comparisons.
+- **Shading Models:**
+  - *Per-Vertex Illumination* — Lighting computed at vertices and interpolated.
+  - *Per-Pixel Illumination* — Lighting computed per fragment for higher accuracy.
+- **Perspective-Correct Interpolation** — Attributes interpolated using `1/z` to avoid distortion caused by perspective projection.
+
+<p align="center">
+  <img src="DH2323Lab3/task4/DrawLine.png" width="31%" />
+  <img src="DH2323Lab3/task6/correct_output.png" width="31%" />
+  <img src="DH2323Lab3/task7/illPerPixel(perspectiveInterp).png" width="31%" />
 </p>
 
 ---
