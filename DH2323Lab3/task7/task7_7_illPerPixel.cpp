@@ -20,7 +20,7 @@ SDL2Aux *sdlAux;
 int t;
 vector<Triangle> triangles;
 float f = SCREEN_HEIGHT/2;
-vec3 cameraPos(0, 0, -3.001); //top left corner
+vec3 cameraPos(0, 0, -2); //top left corner
 float yaw = 0; //initial rotation angle
 float pitch = 0;
 mat3 Ry;
@@ -37,22 +37,37 @@ float depthBuffer[SCREEN_HEIGHT][SCREEN_WIDTH];
 //     float zinv; //inverse depth
 // };
 
-//task7
-typedef struct Vertex{
-    vec3 position;
-	vec3 normal;
-	vec2 reflectance;
-};
+//task7 per Vertex ill
+// typedef struct Vertex{
+//     vec3 position;
+// 	vec3 normal;
+// 	vec3 reflectance;
+// };
 vec3 lightPos(0, -0.5, -0.7);
 vec3 lightPower = 10.1f * vec3(1, 1, 1);
 vec3 indirectLightPowerPerArea = 0.5f * vec3(1, 1, 1);
 
+// typedef struct Pixel{
+//     int x;
+//     int y;
+//     float zinv; //inverse depth
+// 	vec3 illumination;
+// };
+
+//task7.7 per Pixel ill
+vec3 currentNormal;
+vec3 currentReflectance;
 typedef struct Pixel{
     int x;
     int y;
     float zinv; //inverse depth
-	vec3 illumination;
+	vec3 pos3d;
 };
+typedef struct Vertex{
+    vec3 position;
+};
+ 
+
 		
 
 // ----------------------------------------------------------------------------
@@ -217,15 +232,20 @@ void Draw()
 		vertices[1].position = triangles[i].v1;
 		vertices[2].position = triangles[i].v2;
 
-		vertices[0].normal = triangles[i].normal;
-		vertices[1].normal = vertices[0].normal;
-		vertices[2].normal = vertices[0].normal;
+		// vertices[0].normal = triangles[i].normal;
+		// vertices[1].normal = vertices[0].normal;
+		// vertices[2].normal = vertices[0].normal;
 		
-		vertices[0].reflectance = vec2(0.8f, 0.2f);
-		vertices[1].reflectance = vec2(0.8f, 0.2f);
-		vertices[2].reflectance = vec2(0.8f, 0.2f);
+		// vertices[0].reflectance = vec3(1.0f, 1.0f, 1.0f);
+		// vertices[1].reflectance = vec3(1.0f, 1.0f, 1.0f);
+		// vertices[2].reflectance = vec3(1.0f, 1.0f, 1.0f);
 
 		currentColor = triangles[i].color;
+
+		//task 7.7 *********
+		currentNormal = triangles[i].normal;
+		currentReflectance = vec3(1.0f, 1.0f, 1.0f);
+		//*********
 		DrawPolygon(vertices);
 	}
 
@@ -396,9 +416,15 @@ void Interpolate(Pixel a, Pixel b, vector<Pixel>& result){
 	//Pixel current(a);
 
 
-	//task7
-	vec3 stepIll = (b.illumination-a.illumination)/float(max(N-1, 1));
-	vec3 currentIll = a.illumination;
+	//task7.4 *********
+	// vec3 stepIll = (b.illumination-a.illumination)/float(max(N-1, 1));
+	// vec3 currentIll = a.illumination;
+	//************ 
+
+	// task 7.7 per pixel ill *******
+	vec3 stepPos3d = (b.pos3d - a.pos3d)/float(max(N-1, 1));
+	vec3 currentPos3d = a.pos3d;
+	//******** 
 	for(int i = 0; i<N; i++){
 		//error2 image is generated if it is used Pixel curren, this because if the step is for example 0.5 and the 
 		// current.x is an int, adding 0.5 to 2 for example, will result in 2.5 which, casting to int, will return 2
@@ -412,12 +438,14 @@ void Interpolate(Pixel a, Pixel b, vector<Pixel>& result){
 		result[i].x = int(currentX);
         result[i].y = int(currentY);
         result[i].zinv = currentZinv;
-		result[i].illumination = currentIll; //task7
+		//result[i].illumination = currentIll; //task7.4
+		result[i].pos3d = currentPos3d; //task7.7
         
         currentX += stepX;
         currentY += stepY;
         currentZinv += stepZinv;
-		currentIll += stepIll;
+		//currentIll += stepIll; //task 7.4
+		currentPos3d += stepPos3d; //task7.7
 	}
 }
 
@@ -530,8 +558,20 @@ void PixelShader(const Pixel& p){
 	if(x<0 || x >= SCREEN_WIDTH || y<0 || y >= SCREEN_HEIGHT) return;
 	if(p.zinv > depthBuffer[y][x]){
 		depthBuffer[y][x] = p.zinv;
-		sdlAux->putPixel(x, y, p.illumination);
-	}
+		//sdlAux->putPixel(x, y, p.illumination); //task 7.4 illumin per vertex
+		
+		
+		//task 7.7 illumination per pixel
+		float r = glm::length(lightPos - p.pos3d); //difference between the two positions
+		float A = 4.0f * M_PI * r * r;
+		vec3 B = lightPower / A; //power per area
+		
+		vec3 dirSurfaceLight = glm::normalize(lightPos - p.pos3d); 
+
+		//calculations of intensity
+		vec3 D = B * glm::max(glm::dot(currentNormal, dirSurfaceLight), 0.0f);
+		sdlAux->putPixel(x, y, currentColor*(D + indirectLightPowerPerArea));
+		}
 }
 
 
@@ -556,17 +596,18 @@ void VertexShader(const Vertex& v, Pixel& p){
 	p.x = f*(t.x/t.z) + SCREEN_WIDTH/2; //camera is in the center
 	p.y = f*(t.y/t.z) + SCREEN_HEIGHT/2; 
 	p.zinv = 1/t.z;
-	float r = glm::length(lightPos - v.position); //difference between the two positions
-	float A = 4.0f * M_PI * r * r;
-	vec3 B = lightPower / A; //power per area
+	p.pos3d = v.position;
+
+	//task 7.4
+	// float r = glm::length(lightPos - v.position); //difference between the two positions
+	// float A = 4.0f * M_PI * r * r;
+	// vec3 B = lightPower / A; //power per area
 	
-	vec3 dirSurfaceLight = glm::normalize(lightPos - v.position); 
+	// vec3 dirSurfaceLight = glm::normalize(lightPos - v.position); 
 
-	//calculations of intensity
-	vec3 D = B * glm::max(glm::dot(v.normal, dirSurfaceLight), 0.0f);
-	p.illumination = currentColor * (D + indirectLightPowerPerArea);
-
-
+	// //calculations of intensity
+	// vec3 D = B * glm::max(glm::dot(currentNormal, dirSurfaceLight), 0.0f);
+	// //p.illumination = currentColor * (D + indirectLightPowerPerArea);
 
 
 }
